@@ -160,7 +160,7 @@ function tenantForm(){
  if(!x.start)throw Error('Choose a start date.');
  const years=Number(x.years);if(!Number.isInteger(years)||years<1||years>5)throw Error('Choose a valid duration of 1 to 5 years.');
  const end=datePlusYears(x.start,years);if(!end)throw Error('Could not calculate the end date.');
- const normalMonthly=x.arrangement==='family'?0:roomPriceAt(room,today());const monthly=x.agreedMonthly!==''?Number(x.agreedMonthly):normalMonthly;if(!(monthly>=0))throw Error('Enter a valid agreed monthly rent.');
+ const normalMonthly=x.arrangement==='family'?0:roomPriceAt(room,today());const monthly=x.arrangement==='family'?0:(x.agreedMonthly!==''?Number(x.agreedMonthly):normalMonthly);if(!(monthly>=0))throw Error('Enter a valid agreed monthly rent.');
  const photoInput=$('#arrangementPhotos'),photos=await compressTenancyPhotos(photoInput&&photoInput.files?Array.from(photoInput.files):[]);let ten=x.returningTenant?d.tenants.find(t=>String(t.id)===String(x.returningTenant)):null;
  if(x.returningTenant&&!ten)throw Error('That returning tenant could not be found.');
  if(ten){ten.name=x.name.trim();ten.phone=x.phone.trim();ten.phone2=(x.phone2||'').trim();ten.occupation=(x.occupation||'').trim();ten.gender=x.gender||'';ten.marital=x.marital||'';ten.emergencyName=(x.emergencyName||'').trim();ten.emergencyPhone=(x.emergencyPhone||'').trim();}
