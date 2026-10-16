@@ -160,10 +160,18 @@ function editTenantForm(id){
    if(!Number.isFinite(points)||points<0)throw Error('Enter valid water points.');
    const selectedRoom=d.rooms.find(r=>String(r.id)===roomId);if(!selectedRoom)throw Error('Choose a valid room.');
    if(active().some(y=>String(y.room)===roomId&&String(y.id)!==String(tenancy.id)))throw Error('That room is already occupied by another active tenancy.');
-   if(period&&!periodPayments.length){const total=Number(x.periodAmount);if(!Number.isFinite(total)||total<0)throw Error('Enter the actual total rent for this period.');period.amount=Math.round(total*100)/100;period.start=nextStart;period.end=nextEnd;period.monthly=monthly;}
+   const enteredPaid=Number(x.alreadyPaid||0);
+   const proposedTotal=period?(periodPayments.length?(Number(period.amount)||0):Number(x.periodAmount)):Number(x.periodAmount);
+   if(nextArrangement==='existing'){
+    if(!Number.isFinite(proposedTotal)||proposedTotal<0)throw Error('Enter the actual total rent for this period.');
+    if(!Number.isFinite(enteredPaid)||enteredPaid<0||enteredPaid>proposedTotal+0.001)throw Error('Amount already paid must be between zero and the current period total ('+money(proposedTotal)+').');
+    if(periodPayments.length&&enteredPaid<recordedPaid-0.001)throw Error('Amount paid cannot be less than payments already recorded ('+money(recordedPaid)+').');
+    if(enteredPaid>recordedPaid+0.001&&!x.paidDate)throw Error('Enter the date of the additional existing payment.');
+   }
+   if(period&&!periodPayments.length){period.amount=Math.round(proposedTotal*100)/100;period.start=nextStart;period.end=nextEnd;period.monthly=monthly;}
    tenancy.room=Number.isNaN(Number(roomId))?roomId:Number(roomId);tenancy.start=nextStart;tenancy.end=nextEnd;tenancy.monthly=nextArrangement==='family'?0:monthly;tenancy.yearly=nextArrangement==='family'?0:monthly*12;tenancy.points=points;tenancy.arrangement=nextArrangement;tenancy.phone=x.phone.trim();tenancy.code=person.code;
-   if(nextArrangement==='existing'&&period){const entered=Number(x.alreadyPaid||0);if(!Number.isFinite(entered)||entered<recordedPaid-0.001)throw Error('Amount paid cannot be less than payments already recorded ('+money(recordedPaid)+').');if(entered>recordedPaid+0.001){if(!x.paidDate)throw Error('Enter the date of the additional existing payment.');d.rentPayments.push({id:next(d.rentPayments),period:period.id,amount:Math.round((entered-recordedPaid)*100)/100,date:x.paidDate,receipt:'Existing tenant opening payment',method:x.paidMethod||'other'});}}
-   if(nextArrangement==='existing'&&!period){const total=Number(x.periodAmount),entered=Number(x.alreadyPaid||0);if(!Number.isFinite(total)||total<0)throw Error('Enter the actual total rent for this period.');if(!Number.isFinite(entered)||entered<0||entered>total+0.001)throw Error('Amount paid must be between zero and the period total.');const np={id:next(d.periods),tenancy:tenancy.id,start:nextStart,end:nextEnd,amount:Math.round(total*100)/100,monthly,years:null};d.periods.push(np);if(entered>0){if(!x.paidDate)throw Error('Enter payment date.');d.rentPayments.push({id:next(d.rentPayments),period:np.id,amount:Math.round(entered*100)/100,date:x.paidDate,receipt:'Existing tenant opening payment',method:x.paidMethod||'other'});}}
+   if(nextArrangement==='existing'&&period&&enteredPaid>recordedPaid+0.001){d.rentPayments.push({id:next(d.rentPayments),period:period.id,amount:Math.round((enteredPaid-recordedPaid)*100)/100,date:x.paidDate,receipt:'Existing tenant opening payment',method:x.paidMethod||'other'});}
+   if(nextArrangement==='existing'&&!period){const np={id:next(d.periods),tenancy:tenancy.id,start:nextStart,end:nextEnd,amount:Math.round(proposedTotal*100)/100,monthly,years:null};d.periods.push(np);if(enteredPaid>0)d.rentPayments.push({id:next(d.rentPayments),period:np.id,amount:Math.round(enteredPaid*100)/100,date:x.paidDate,receipt:'Existing tenant opening payment',method:x.paidMethod||'other'});}
   }
   person.name=x.name.trim();person.phone=x.phone.trim();person.phone2=(x.phone2||'').trim();person.occupation=(x.occupation||'').trim();person.gender=x.gender||'';person.marital=x.marital||'';person.emergencyName=(x.emergencyName||'').trim();person.emergencyPhone=(x.emergencyPhone||'').trim();
   d.tenancies.filter(y=>String(y.tenant)===String(person.id)).forEach(y=>{y.phone=person.phone;y.code=person.code});
