@@ -1,0 +1,17 @@
+{
+  "name": "HousePilot",
+  "short_name": "HousePilot",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f4",
+  "theme_color": "#142a24",
+  "icons": [
+    {
+      "src": "./housepilot-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
