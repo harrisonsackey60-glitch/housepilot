@@ -12,7 +12,23 @@ const $=s=>document.querySelector(s),today=()=>{const n=new Date();return n.getF
 const empty=()=>({roomTypes:[],rooms:[],tenants:[],tenancies:[],periods:[],rentPayments:[],bills:[],charges:[],waterPayments:[]});
 let d,section='Dashboard';
 function roomPriceAt(room,asOf=today()){if(!room)return 0;const history=Array.isArray(room.priceHistory)?room.priceHistory:[];const eligible=history.filter(h=>!h.date||String(h.date)<=asOf).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));return eligible.length?Math.max(0,Number(eligible[eligible.length-1].price)||0):Math.max(0,Number(room.price)||0)}
- function load(){if(localStorage.getItem('hp-fresh-start-v2')!=='done'){localStorage.setItem('hp-data',JSON.stringify(empty()));localStorage.setItem('hp-fresh-start-v2','done')}try{d=JSON.parse(localStorage.getItem('hp-data')||'null')||empty()}catch(e){d=empty()} d.roomTypes=d.roomTypes||[]; d.rooms=d.rooms||[]; d.tenants=d.tenants||[]; d.tenancies=d.tenancies||[]; d.tenancies.forEach(t=>{if(t.points==null)t.points=1}); d.periods=d.periods||[]; d.rentPayments=d.rentPayments||[]; d.bills=d.bills||[]; d.charges=d.charges||[]; d.waterPayments=d.waterPayments||[]; d.rooms.forEach(r=>{if(!d.roomTypes.some(t=>t.name.toLowerCase()===String(r.type||'').toLowerCase()))d.roomTypes.push({id:next(d.roomTypes),name:r.type||'Single Room',price:+r.price||0});if(Array.isArray(r.priceHistory)&&r.priceHistory.length)r.price=roomPriceAt(r,today())})}
+ function load(){
+  const saved=localStorage.getItem('hp-data');
+  if(saved===null){d=empty()}
+  else{try{d=JSON.parse(saved)}catch(e){throw Error('HousePilot found saved property data but could not read its format. Your saved data has been left untouched. Please contact support before trying to reset anything.')}}
+  if(!d||typeof d!=='object'||Array.isArray(d))throw Error('HousePilot found saved property data in an unexpected format. Your saved data has been left untouched.');
+  d.roomTypes=Array.isArray(d.roomTypes)?d.roomTypes:[];
+  d.rooms=Array.isArray(d.rooms)?d.rooms:[];
+  d.tenants=Array.isArray(d.tenants)?d.tenants:[];
+  d.tenancies=Array.isArray(d.tenancies)?d.tenancies:[];
+  d.tenancies.forEach(t=>{if(t&&typeof t==='object'&&t.points==null)t.points=1});
+  d.periods=Array.isArray(d.periods)?d.periods:[];
+  d.rentPayments=Array.isArray(d.rentPayments)?d.rentPayments:[];
+  d.bills=Array.isArray(d.bills)?d.bills:[];
+  d.charges=Array.isArray(d.charges)?d.charges:[];
+  d.waterPayments=Array.isArray(d.waterPayments)?d.waterPayments:[];
+  d.rooms.forEach(r=>{if(!r||typeof r!=='object')return;const typeName=String(r.type||'').toLowerCase();if(!d.roomTypes.some(t=>t&&String(t.name||'').toLowerCase()===typeName))d.roomTypes.push({id:next(d.roomTypes),name:r.type||'Single Room',price:+r.price||0});if(Array.isArray(r.priceHistory)&&r.priceHistory.length)r.price=roomPriceAt(r,today())})
+}
 function save(){try{localStorage.setItem('hp-data',JSON.stringify(d))}catch(e){if(e&&(/quota|storage/i.test(String(e.name||'')+' '+String(e.message||''))))throw Error('HousePilot could not save because this browser may be running out of local storage. Your existing saved records have not been intentionally cleared. Close the form and avoid refreshing until you have freed browser storage or reduced the size of new photos.');throw e}}
 function login(){
  function showLogin(recovery=false){
@@ -349,6 +365,7 @@ function waterReport(id){
  $('#copyWaterReport').onclick=async()=>{let ta=$('#waterReportText');try{await navigator.clipboard.writeText(ta.value);alert('Water-bill list copied. Open WhatsApp and paste it into your group.')}catch(e){ta.focus();ta.select();try{document.execCommand('copy');alert('Water-bill list copied. Open WhatsApp and paste it into your group.')}catch(_){alert('Please select the text and copy it manually.')}}};
  $('#selectWaterReport').onclick=()=>{$('#waterReportText').focus();$('#waterReportText').select()};
 }
-load();if(sessionStorage.getItem('hp-open')==='1')shell();else login();
+try{load();if(sessionStorage.getItem('hp-open')==='1')shell();else login()}
+catch(error){const app=$('#app');if(app){app.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#f3f6f4;color:#182923;font:15px system-ui"><div style="max-width:520px;background:white;border:1px solid #dce5df;border-radius:16px;padding:22px"><h2 style="margin:0 0 10px">HousePilot could not finish loading</h2><p style="line-height:1.5">Your saved property records have not been intentionally reset. Please take a screenshot of this message and contact support before clearing browser data or trying a reset.</p><p id="hpStartupError" style="font-size:12px;color:#66756d;overflow-wrap:anywhere"></p><button type="button" onclick="location.reload()" style="margin-top:8px;background:#176b4b;color:white">Try again</button></div></div>';const detail=$('#hpStartupError');if(detail)detail.textContent=error&&error.message?error.message:'An unexpected startup error occurred.'}}
 })();
 </script></body></html>
