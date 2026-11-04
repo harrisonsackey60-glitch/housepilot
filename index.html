@@ -63,7 +63,7 @@ let roomFilter='All';
  function openGlobalRecord(action,id,targetSection){section=targetSection;render();if(action==='tenant')tenantDetails(id);else if(action==='room')editRoomForm(id);else if(action==='category')editTypeForm(id);else if(action==='rent')rentPay(id);else if(action==='water')waterReport(id)}
  function wireGlobalSearch(){const input=$('#globalSearch'),results=$('#globalSearchResults');if(!input||!results)return;input.oninput=()=>{results.innerHTML=globalSearchResults(input.value);results.querySelectorAll('[data-global-open]').forEach(b=>b.onclick=()=>openGlobalRecord(b.dataset.globalOpen,b.dataset.recordId,b.dataset.recordSection))}}
  function wireSectionSearch(){const input=$('#sectionSearch');if(!input)return;input.oninput=()=>{const q=input.value.trim().toLowerCase();$('#content').querySelectorAll('tr').forEach(row=>{if(row.querySelector('th'))return;row.style.display=!q||row.textContent.toLowerCase().includes(q)?'':'none'});if(section==='Water Bill')$('#content').querySelectorAll('div[style*="border-bottom"]').forEach(card=>{card.style.display=!q||card.textContent.toLowerCase().includes(q)?'':'none'})}}
-function render(){renderGlobalWarnings();const c=$('#content');if(!c)return;
+function render(){document.querySelectorAll('[data-section]').forEach(b=>{const active=b.dataset.section===section;b.classList.toggle('active',active);b.setAttribute('aria-current',active?'page':'false')});renderGlobalWarnings();const c=$('#content');if(!c)return;
 if(section==='Dashboard'){
  const monthKey=window.hpDashboardMonth||(window.hpDashboardMonth=today().slice(0,7));
  const monthStart=monthKey+'-01',monthEnd=monthKey+'-'+new Date(Number(monthKey.slice(0,4)),Number(monthKey.slice(5,7)),0).getDate();
