@@ -166,8 +166,27 @@ function openGlobalRecord(action,id,sectionName){
  if(action==='water'){section='Water Bill';render();const b=d.bills.find(x=>String(x.id)===key);if(b)waterReport(key);else alert('Water bill not found.');return}
  alert('This search result could not be opened. Please try searching again.')
 }
- function wireGlobalSearch(){const input=$('#globalSearch'),results=$('#globalSearchResults');if(!input||!results)return;const run=()=>{results.innerHTML=globalSearchResults(input.value);results.querySelectorAll('[data-global-open]').forEach(b=>{b.type='button';b.style.cursor='pointer';b.onclick=e=>{e.preventDefault();openGlobalRecord(b.dataset.globalOpen,b.dataset.recordId,b.dataset.recordSection)}})};input.oninput=run;input.onsearch=run;input.onchange=run;input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();run();const first=results.querySelector('[data-global-open]');if(first)first.click()}})}
- function wireSectionSearch(){const input=$('#sectionSearch');if(!input)return;input.oninput=()=>{const q=input.value.trim().toLowerCase();$('#content').querySelectorAll('tr').forEach(row=>{if(row.querySelector('th'))return;row.style.display=!q||row.textContent.toLowerCase().includes(q)?'':'none'});if(section==='Water Bill')$('#content').querySelectorAll('div[style*="border-bottom"]').forEach(card=>{card.style.display=!q||card.textContent.toLowerCase().includes(q)?'':'none'})}}
+ function wireGlobalSearch(){
+ const input=$('#globalSearch'),results=$('#globalSearchResults');if(!input||!results)return;
+ const run=()=>{const query=input.value.trim();try{results.innerHTML=globalSearchResults(query)}catch(err){console.error('HousePilot global search error',err);results.innerHTML='<div class="empty">Search could not complete. Please try a shorter search.</div>'}};
+ input.addEventListener('input',run);input.addEventListener('search',run);input.addEventListener('change',run);
+ input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();run();const first=results.querySelector('[data-global-open]');if(first)first.click()}});
+ results.addEventListener('click',e=>{const b=e.target.closest('[data-global-open]');if(!b)return;e.preventDefault();openGlobalRecord(b.dataset.globalOpen,b.dataset.recordId,b.dataset.recordSection)});
+ }
+ function wireSectionSearch(){
+ const input=$('#sectionSearch'),content=$('#content');if(!input||!content)return;
+ const run=()=>{const q=input.value.trim().toLowerCase();
+ content.querySelectorAll('tr').forEach(row=>{if(row.querySelector('th'))return;row.style.display=!q||row.textContent.toLowerCase().includes(q)?'':'none'});
+ content.querySelectorAll('.room-mini-card').forEach(card=>{card.style.display=!q||card.textContent.toLowerCase().includes(q)?'':'none'});
+ if(section==='Water Bill')content.querySelectorAll('.water-bill-card').forEach(card=>{card.style.display=!q||card.textContent.toLowerCase().includes(q)?'':'none'});
+ const searchable=Array.from(content.querySelectorAll('tr:not(:has(th)),.room-mini-card,.water-bill-card'));
+ const visible=searchable.filter(el=>el.style.display!=='none');
+ let empty=content.querySelector('#sectionSearchEmpty');
+ if(!empty){empty=document.createElement('div');empty.id='sectionSearchEmpty';empty.className='empty';input.closest('.section-search').insertAdjacentElement('afterend',empty)}
+ empty.textContent=q&&!visible.length?'No matching records found.':'';empty.style.display=q&&!visible.length?'block':'none';
+ };
+ input.addEventListener('input',run);input.addEventListener('search',run);input.addEventListener('change',run);
+ }
 function renderRoomsSection(){
  const c=$('#content'),rooms=d.rooms.filter(r=>r.active!==false),occ=r=>active().some(t=>String(t.room)===String(r.id)),shown=rooms.filter(r=>roomFilter==='All'||(roomFilter==='Occupied'?occ(r):!occ(r)));
  const cards=shown.map(r=>{const t=active().find(x=>String(x.room)===String(r.id)),price=roomPriceAt(r,today());return '<article class="room-mini-card"><div class="room-mini-top"><div class="room-mini-icon">⌂</div><span class="pill '+(t?'':'away')+'">'+(t?'Occupied':'Vacant')+'</span></div><div class="room-mini-name">'+esc(r.number||('Room '+r.id))+'</div><div class="room-mini-type">'+esc(r.type||'Room')+(r.features?' · '+esc(r.features):'')+'</div><div class="room-mini-price">'+money(price)+'<small>/ month</small></div><div class="room-mini-tenant">'+(t?'<span>Tenant</span><b>'+esc(tn(t.tenant))+'</b>':'<span>No active tenant</span>')+'</div><div class="room-mini-actions"><button class="secondary" data-viewroom="'+r.id+'">View</button><button class="secondary" data-editroom="'+r.id+'">Edit</button><button class="secondary" data-pricehistory="'+r.id+'">History</button></div><div class="room-mini-more"><button class="secondary" data-price="'+r.id+'">Change rent</button><button class="secondary" data-deleteroom="'+r.id+'">Deactivate</button></div></article>'}).join('');
