@@ -215,7 +215,7 @@ function tenantDetails(id){
   const rows=periods.map(p=>{
    const pays=d.rentPayments.filter(x=>String(x.period)===String(p.id));
    const paid=sum(pays,x=>+x.amount||0);
-   return '<div class="card" style="margin-top:9px"><b>Rent period: '+esc(dateDisplay(p.start))+' – '+esc(dateDisplay(p.end))+'</b><p class="muted">Due '+moneyCell(p.amount)+' · Paid '+moneyCell(paid)+' · Balance '+moneyCell((+p.amount||0)-paid)+'</p>'+(pays.length?'<div class="muted">'+pays.map(x=>'Payment '+moneyCell(x.amount)+' · '+esc(dateDisplay(x.date||''))+' · Receipt '+esc(x.receipt||'—')+' <button class="secondary" data-edit-rentpay="'+x.id+'">Edit</button>').join('<br>')+'</div>':'<div class="muted">No payments recorded for this period.</div>')+'</div>';
+   return '<div class="card" style="margin-top:9px"><b>Rent period: '+esc(dateDisplay(p.start))+' – '+esc(dateDisplay(p.end))+'</b><p class="muted">Due '+moneyCell(p.amount)+' · Paid '+moneyCell(paid)+' · Balance '+moneyCell((+p.amount||0)-paid)+'</p>'+(pays.length?'<div class="muted">'+pays.map(x=>'Payment '+moneyCell(x.amount)+' · '+esc(dateDisplay(x.date||''))+' · '+esc(({cash:'Cash',momo:'Mobile Money',bank:'Bank Transfer',cheque:'Cheque',other:'Other'})[x.method]||x.method||'Method not recorded')+' · Receipt '+esc(x.receipt||'—')+' <button class="secondary" data-edit-rentpay="'+x.id+'">Edit</button>').join('<br>')+'</div>':'<div class="muted">No payments recorded for this period.</div>')+'</div>';
   }).join('');
   const water=waterRows.filter(c=>String(c.tenancy)===String(t.id));
   const family=t.arrangement==='family';
